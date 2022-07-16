@@ -43,7 +43,8 @@
     }
   }
 
-  &__caption {
+  &__caption,
+  &__source {
     &[contentEditable="true"][data-placeholder]::before {
       position: absolute !important;
       content: attr(data-placeholder);
@@ -61,6 +62,10 @@
         display: none;
       }
     }
+  }
+
+  &__caption {
+    margin-bottom: 10px;
   }
 
   &--empty {
