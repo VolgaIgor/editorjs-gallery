@@ -1,5 +1,5 @@
 {
-  "name": "@editorjs/image",
+  "name": "VolgaIgor/image-with-source",
   "version": "2.6.2",
   "keywords": [
     "codex editor",
@@ -8,9 +8,9 @@
     "editor.js",
     "editorjs"
   ],
-  "description": "Image Tool for Editor.js",
+  "description": "Image Tool with source field for Editor.js",
   "license": "MIT",
-  "repository": "https://github.com/editor-js/image",
+  "repository": "https://github.com/VolgaIgor/image-with-source",
   "main": "./dist/bundle.js",
   "scripts": {
     "build": "webpack --mode production",
@@ -20,8 +20,7 @@
     "lint:fix": "eslint src/ --ext .js --fix"
   },
   "author": {
-    "name": "CodeX",
-    "email": "team@ifmo.su"
+    "name": "CodeX & Igor Shuvalov «VolgaIgor»"
   },
   "devDependencies": {
     "@babel/core": "^7.3.4",
