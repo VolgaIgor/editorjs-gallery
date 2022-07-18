@@ -8,8 +8,6 @@ All configuration parameters match the original, except:
 
 ## Installation
 
-### Install via NPM
-
 ### Other methods
 
 #### Manual downloading and connecting
