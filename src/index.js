@@ -1,5 +1,5 @@
 /**
- * Image Tool for the Editor.js
+ * Image Gallery Tool for the Editor.js
  *
  * @author CodeX <team@codex.so>
  * @license MIT
@@ -20,26 +20,29 @@
  * It will expose 8008 port, so you can pass http://localhost:8008 with the Tools config:
  *
  * image: {
- *   class: ImageTool,
+ *   class: ImageGallery,
  *   config: {
  *     endpoints: {
  *       byFile: 'http://localhost:8008/uploadFile',
- *       byUrl: 'http://localhost:8008/fetchUrl',
  *     }
  *   },
  * },
  */
 
 /**
- * @typedef {object} ImageToolData
+ * @typedef {object} ImageGalleryDataFile
+ * @description Image Gallery Tool's files data format
+ * @property {integer} _id — image ID
+ * @property {string} url — image URL
+ */
+
+/**
+ * @typedef {object} ImageGalleryData
  * @description Image Tool's input and output data format
- * @property {string} caption — image caption
- * @property {string} source — image source info
- * @property {boolean} withBorder - should image be rendered with border
- * @property {boolean} withBackground - should image be rendered with background
- * @property {boolean} stretched - should image be stretched to full width of container
- * @property {object} file — Image file data returned from backend
- * @property {string} file.url — image URL
+ * @property {boolean} style - slider or fit
+ * @property {string} caption — gallery caption
+ * @property {string} source — gallery source info
+ * @property {ImageGalleryDataFile[]} files — Image file data returned from backend
  */
 
 // eslint-disable-next-line
@@ -54,7 +57,6 @@ import Uploader from './uploader';
  * @description Config supported by Tool
  * @property {object} endpoints - upload endpoints
  * @property {string} endpoints.byFile - upload by file
- * @property {string} endpoints.byUrl - upload by URL
  * @property {string} field - field name for uploaded image
  * @property {string} types - available mime-types
  * @property {string} captionPlaceholder - placeholder for Caption field
@@ -64,7 +66,6 @@ import Uploader from './uploader';
  * @property {string} buttonContent - overrides for Select File button
  * @property {object} [uploader] - optional custom uploader
  * @property {function(File): Promise.<UploadResponseFormat>} [uploader.uploadByFile] - method that upload image by File
- * @property {function(string): Promise.<UploadResponseFormat>} [uploader.uploadByUrl] - method that upload image by URL
  */
 
 /**
@@ -76,7 +77,7 @@ import Uploader from './uploader';
  *                           also can contain any additional data that will be saved and passed back
  * @property {string} file.url - [Required] image source URL
  */
-export default class ImageTool {
+export default class ImageGallery {
   /**
    * Notify core that read-only mode is supported
    *
@@ -96,13 +97,13 @@ export default class ImageTool {
   static get toolbox() {
     return {
       icon: ToolboxIcon,
-      title: 'Image',
+      title: 'Gallery',
     };
   }
 
   /**
    * @param {object} tool - tool properties got from editor.js
-   * @param {ImageToolData} tool.data - previously saved data
+   * @param {ImageGalleryData} tool.data - previously saved data
    * @param {ImageConfig} tool.config - user config for Tool
    * @param {object} tool.api - Editor.js API
    * @param {boolean} tool.readOnly - read-only mode flag
@@ -120,8 +121,8 @@ export default class ImageTool {
       additionalRequestHeaders: config.additionalRequestHeaders || {},
       field: config.field || 'image',
       types: config.types || 'image/*',
-      captionPlaceholder: this.api.i18n.t(config.captionPlaceholder || 'Caption'),
-      sourcePlaceholder: this.api.i18n.t(config.sourcePlaceholder || 'Source'),
+      captionPlaceholder: this.api.i18n.t(config.captionPlaceholder || 'Gallery caption'),
+      sourcePlaceholder: this.api.i18n.t(config.sourcePlaceholder || 'Images source'),
       buttonContent: config.buttonContent || '',
       uploader: config.uploader || undefined,
       actions: config.actions || [],
@@ -149,6 +150,9 @@ export default class ImageTool {
           },
         });
       },
+      onDeleteFile: (id) => {
+        this.deleteImage(id);
+      },
       readOnly,
     });
 
@@ -158,7 +162,7 @@ export default class ImageTool {
     this.tunes = new Tunes({
       api,
       actions: this.config.actions,
-      onChange: (tuneName) => this.tuneToggled(tuneName),
+      onChange: (styleName) => this.styleToggled(styleName),
     });
 
     /**
@@ -166,6 +170,8 @@ export default class ImageTool {
      */
     this._data = {};
     this.data = data;
+
+    this._imageCounter = 0;
   }
 
   /**
@@ -182,12 +188,16 @@ export default class ImageTool {
   /**
    * Validate data: check if Image exists
    *
-   * @param {ImageToolData} savedData — data received after saving
+   * @param {ImageGalleryData} savedData — data received after saving
    * @returns {boolean} false if saved data is not correct, otherwise true
    * @public
    */
   validate(savedData) {
-    return savedData.file && savedData.file.url;
+    if (!savedData.files || !savedData.files.length) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -195,7 +205,7 @@ export default class ImageTool {
    *
    * @public
    *
-   * @returns {ImageToolData}
+   * @returns {ImageGalleryData}
    */
   save() {
     const caption = this.ui.nodes.caption;
@@ -203,6 +213,11 @@ export default class ImageTool {
 
     this._data.caption = caption.innerHTML;
     this._data.source = source.innerHTML;
+
+    let data = this.data;
+    data.files.forEach(file => {
+      delete file._id;
+    });
 
     return this.data;
   }
@@ -229,72 +244,27 @@ export default class ImageTool {
   }
 
   /**
-   * Specify paste substitutes
+   * Set new image file
    *
-   * @see {@link https://github.com/codex-team/editor.js/blob/master/docs/tools.md#paste-handling}
-   * @returns {{tags: string[], patterns: object<string, RegExp>, files: {extensions: string[], mimeTypes: string[]}}}
+   * @private
+   *
+   * @param {ImageGalleryDataFile} file - uploaded file data
    */
-  static get pasteConfig() {
-    return {
-      /**
-       * Paste HTML into Editor
-       */
-      tags: [ 'img' ],
-
-      /**
-       * Paste URL of image into the Editor
-       */
-      patterns: {
-        image: /https?:\/\/\S+\.(gif|jpe?g|tiff|png)$/i,
-      },
-
-      /**
-       * Drag n drop file from into the Editor
-       */
-      files: {
-        mimeTypes: [ 'image/*' ],
-      },
-    };
+  appendImage(file) {
+    if (file && file.url) {
+      file._id = this._imageCounter++;
+      this._data.files.push(file);
+      this.ui.appendImage(file);
+    }
   }
 
-  /**
-   * Specify paste handlers
-   *
-   * @public
-   * @see {@link https://github.com/codex-team/editor.js/blob/master/docs/tools.md#paste-handling}
-   * @param {CustomEvent} event - editor.js custom paste event
-   *                              {@link https://github.com/codex-team/editor.js/blob/master/types/tools/paste-events.d.ts}
-   * @returns {void}
-   */
-  async onPaste(event) {
-    switch (event.type) {
-      case 'tag': {
-        const image = event.detail.data;
+  deleteImage(id) {
+    let deleteIndex = this._data.files.findIndex(file => {
+      return file._id == id;
+    });
 
-        /** Images from PDF */
-        if (/^blob:/.test(image.src)) {
-          const response = await fetch(image.src);
-          const file = await response.blob();
-
-          this.uploadFile(file);
-          break;
-        }
-
-        this.uploadUrl(image.src);
-        break;
-      }
-      case 'pattern': {
-        const url = event.detail.data;
-
-        this.uploadUrl(url);
-        break;
-      }
-      case 'file': {
-        const file = event.detail.file;
-
-        this.uploadFile(file);
-        break;
-      }
+    if (deleteIndex !== -1) {
+      this._data.files = this._data.files.splice(deleteIndex, 1);
     }
   }
 
@@ -308,10 +278,15 @@ export default class ImageTool {
    *
    * @private
    *
-   * @param {ImageToolData} data - data in Image Tool format
+   * @param {ImageGalleryData} data - data in Image Tool format
    */
   set data(data) {
-    this.image = data.file;
+    this._data.files = [];
+    if (data.files) {
+      data.files.forEach(file => {
+        this.appendImage(file);
+      });
+    }
 
     this._data.caption = data.caption || '';
     this.ui.fillCaption(this._data.caption);
@@ -319,11 +294,8 @@ export default class ImageTool {
     this._data.source = data.source || '';
     this.ui.fillSource(this._data.source);
 
-    Tunes.tunes.forEach(({ name: tune }) => {
-      const value = typeof data[tune] !== 'undefined' ? data[tune] === true || data[tune] === 'true' : false;
-
-      this.setTune(tune, value);
-    });
+    let style = data.style || '';
+    this.styleToggled(style);
   }
 
   /**
@@ -331,25 +303,10 @@ export default class ImageTool {
    *
    * @private
    *
-   * @returns {ImageToolData}
+   * @returns {ImageGalleryData}
    */
   get data() {
     return this._data;
-  }
-
-  /**
-   * Set new image file
-   *
-   * @private
-   *
-   * @param {object} file - uploaded file data
-   */
-  set image(file) {
-    this._data.file = file || {};
-
-    if (file && file.url) {
-      this.ui.fillImage(file.url);
-    }
   }
 
   /**
@@ -361,8 +318,10 @@ export default class ImageTool {
    * @returns {void}
    */
   onUpload(response) {
+    this.ui.hidePreloader();
+
     if (response.success && response.file) {
-      this.image = response.file;
+      this.appendImage(response.file);
     } else {
       this.uploadingFailed('incorrect response: ' + JSON.stringify(response));
     }
@@ -382,6 +341,7 @@ export default class ImageTool {
       message: this.api.i18n.t('Couldn’t upload image. Please try another.'),
       style: 'error',
     });
+
     this.ui.hidePreloader();
   }
 
@@ -393,60 +353,11 @@ export default class ImageTool {
    * @param {string} tuneName - tune that has been clicked
    * @returns {void}
    */
-  tuneToggled(tuneName) {
-    // inverse tune state
-    this.setTune(tuneName, !this._data[tuneName]);
-  }
-
-  /**
-   * Set one tune
-   *
-   * @param {string} tuneName - {@link Tunes.tunes}
-   * @param {boolean} value - tune state
-   * @returns {void}
-   */
-  setTune(tuneName, value) {
-    this._data[tuneName] = value;
-
-    this.ui.applyTune(tuneName, value);
-
-    if (tuneName === 'stretched') {
-      /**
-       * Wait until the API is ready
-       */
-      Promise.resolve().then(() => {
-        const blockId = this.api.blocks.getCurrentBlockIndex();
-
-        this.api.blocks.stretchBlock(blockId, value);
-      })
-        .catch(err => {
-          console.error(err);
-        });
+  styleToggled(tuneName) {
+    if (tuneName === 'fit') {
+      this._data.style = 'fit';
+    } else {
+      this._data.style = 'slider';
     }
-  }
-
-  /**
-   * Show preloader and upload image file
-   *
-   * @param {File} file - file that is currently uploading (from paste)
-   * @returns {void}
-   */
-  uploadFile(file) {
-    this.uploader.uploadByFile(file, {
-      onPreview: (src) => {
-        this.ui.showPreloader(src);
-      },
-    });
-  }
-
-  /**
-   * Show preloader and upload image by target url
-   *
-   * @param {string} url - url pasted
-   * @returns {void}
-   */
-  uploadUrl(url) {
-    this.ui.showPreloader(url);
-    this.uploader.uploadByUrl(url);
   }
 }

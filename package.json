@@ -1,16 +1,17 @@
 {
-  "name": "VolgaIgor/image-with-source",
-  "version": "2.6.2",
+  "name": "editorjs-gallery",
+  "version": "1.0.0",
   "keywords": [
     "codex editor",
     "tool",
     "image",
+    "gallery",
     "editor.js",
     "editorjs"
   ],
-  "description": "Image Tool with source field for Editor.js",
+  "description": "Image Gallery Tool with source field for Editor.js",
   "license": "MIT",
-  "repository": "https://github.com/VolgaIgor/image-with-source",
+  "repository": "https://github.com/VolgaIgor/editorjs-gallery",
   "main": "./dist/bundle.js",
   "scripts": {
     "build": "webpack --mode production",

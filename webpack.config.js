@@ -42,7 +42,7 @@ module.exports = {
     path: path.join(__dirname, '/dist'),
     publicPath: '/',
     filename: 'bundle.js',
-    library: 'ImageTool',
+    library: 'ImageGallery',
     libraryTarget: 'umd',
     libraryExport: 'default'
   }

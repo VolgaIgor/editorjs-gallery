@@ -1,25 +1,43 @@
-.image-tool {
+.image-gallery {
   --bg-color: #cdd1e0;
   --front-color: #388ae5;
   --border-color: #e8e8eb;
 
-  &__image {
-    border-radius: 3px;
-    overflow: hidden;
+  &__items {
+    display: grid;
+    background: black;
+    padding: 10px;
+    gap: 10px;
+    grid-template-columns: 1fr 1fr 1fr;
     margin-bottom: 10px;
+  }
+
+  &__image {
+    position: relative;
+    overflow: hidden;
+    height: 120px;
+
+    &--empty,
+    &--loading {
+      display: none;
+    }
 
     &-picture {
+      border-radius: 3px;
       max-width: 100%;
-      vertical-align: bottom;
+      height: 100%;
       display: block;
+      margin: auto;
+      object-fit: cover;
     }
 
     &-preloader {
+      display: none;
       width: 50px;
       height: 50px;
       border-radius: 50%;
       background-size: cover;
-      margin: auto;
+      margin: 35px auto;
       position: relative;
       background-color: var(--bg-color);
       background-position: center center;
@@ -39,6 +57,24 @@
         margin-left: -30px;
         animation: image-preloader-spin 2s infinite linear;
         box-sizing: border-box;
+      }
+    }
+
+    &-trash {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 18px;
+      background-color: rgba(0, 0, 0, .6);
+      line-height: 1;
+      padding: 6px 8px;
+      border-radius: 3px;
+      transition: background-color .1s;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, .9);
       }
     }
   }
@@ -68,46 +104,8 @@
     margin-bottom: 10px;
   }
 
-  &--empty {
-    ^&__image {
-      display: none;
-    }
-  }
-
-  &--empty,
-  &--loading {
-    ^&__caption {
-      display: none;
-    }
-  }
-
-  &--filled {
-    .cdx-button {
-      display: none;
-    }
-
-    ^&__image {
-      &-preloader {
-        display: none;
-      }
-    }
-  }
-
-  &--loading {
-    ^&__image {
-      min-height: 200px;
-      display: flex;
-      border: 1px solid var(--border-color);
-      background-color: #fff;
-
-      &-picture {
-        display: none;
-      }
-    }
-
-    .cdx-button {
-      display: none;
-    }
+  .cdx-button {
+    height: 50px;
   }
 
   /**
@@ -115,30 +113,13 @@
    * ----------------
    */
 
-  &--withBorder {
-    ^&__image {
-      border: 1px solid var(--border-color);
-    }
+  &__tune-wrapper {
+    display: flex;
   }
 
-  &--withBackground {
-    ^&__image {
-      padding: 15px;
-      background: var(--bg-color);
-
-      &-picture {
-        max-width: 60%;
-        margin: 0 auto;
-      }
-    }
-  }
-
-  &--stretched {
-    ^&__image {
-      &-picture {
-        width: 100%;
-      }
-    }
+  &__tune {
+    width: 50%;
+    margin-right: 0 !important;
   }
 }
 
@@ -146,6 +127,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }

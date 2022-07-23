@@ -1,4 +1,5 @@
 import buttonIcon from './svg/button-icon.svg';
+import trashIcon from './svg/trash.svg';
 
 /**
  * Class for working with UI:
@@ -14,17 +15,17 @@ export default class Ui {
    * @param {Function} ui.onSelectFile - callback for clicks on Select file button
    * @param {boolean} ui.readOnly - read-only mode flag
    */
-  constructor({ api, config, onSelectFile, readOnly }) {
+  constructor({ api, config, onSelectFile, onDeleteFile, readOnly }) {
     this.api = api;
     this.config = config;
     this.onSelectFile = onSelectFile;
+    this.onDeleteFile = onDeleteFile;
     this.readOnly = readOnly;
     this.nodes = {
       wrapper: make('div', [this.CSS.baseClass, this.CSS.wrapper]),
-      imageContainer: make('div', [this.CSS.imageContainer]),
       fileButton: this.createFileButton(),
-      imageEl: undefined,
       imagePreloader: make('div', this.CSS.imagePreloader),
+      itemsContainer: make('div', this.CSS.itemsContainer),
       caption: make('div', [this.CSS.input, this.CSS.caption], {
         contentEditable: !this.readOnly,
       }),
@@ -36,21 +37,22 @@ export default class Ui {
     /**
      * Create base structure
      *  <wrapper>
-     *    <image-container>
+     *    <items-container>
+     *      <image-container />
      *      <image-preloader />
-     *    </image-container>
+     *      <select-file-button />
+     *    </items-container>
      *    <caption />
      *    <source />
-     *    <select-file-button />
      *  </wrapper>
      */
     this.nodes.caption.dataset.placeholder = this.config.captionPlaceholder;
     this.nodes.source.dataset.placeholder = this.config.sourcePlaceholder;
-    this.nodes.imageContainer.appendChild(this.nodes.imagePreloader);
-    this.nodes.wrapper.appendChild(this.nodes.imageContainer);
+    this.nodes.itemsContainer.appendChild(this.nodes.imagePreloader);
+    this.nodes.itemsContainer.appendChild(this.nodes.fileButton);
+    this.nodes.wrapper.appendChild(this.nodes.itemsContainer);
     this.nodes.wrapper.appendChild(this.nodes.caption);
     this.nodes.wrapper.appendChild(this.nodes.source);
-    this.nodes.wrapper.appendChild(this.nodes.fileButton);
   }
 
   /**
@@ -68,12 +70,14 @@ export default class Ui {
       /**
        * Tool's classes
        */
-      wrapper: 'image-tool',
-      imageContainer: 'image-tool__image',
-      imagePreloader: 'image-tool__image-preloader',
-      imageEl: 'image-tool__image-picture',
-      caption: 'image-tool__caption',
-      source: 'image-tool__source',
+      wrapper: 'image-gallery',
+      itemsContainer: 'image-gallery__items',
+      imageContainer: 'image-gallery__image',
+      imagePreloader: 'image-gallery__image-preloader',
+      imageEl: 'image-gallery__image-picture',
+      trashButton: 'image-gallery__image-trash',
+      caption: 'image-gallery__caption',
+      source: 'image-gallery__source',
     };
   };
 
@@ -96,16 +100,10 @@ export default class Ui {
   /**
    * Renders tool UI
    *
-   * @param {ImageToolData} toolData - saved tool data
+   * @param {ImageGalleryData} toolData - saved tool data
    * @returns {Element}
    */
   render(toolData) {
-    if (!toolData.file || Object.keys(toolData.file).length === 0) {
-      this.toggleStatus(Ui.status.EMPTY);
-    } else {
-      this.toggleStatus(Ui.status.UPLOADING);
-    }
-
     return this.nodes.wrapper;
   }
 
@@ -134,8 +132,7 @@ export default class Ui {
    */
   showPreloader(src) {
     this.nodes.imagePreloader.style.backgroundImage = `url(${src})`;
-
-    this.toggleStatus(Ui.status.UPLOADING);
+    this.nodes.imagePreloader.style.display = 'block';
   }
 
   /**
@@ -145,23 +142,25 @@ export default class Ui {
    */
   hidePreloader() {
     this.nodes.imagePreloader.style.backgroundImage = '';
-    this.toggleStatus(Ui.status.EMPTY);
+    this.nodes.imagePreloader.style.display = 'none';
   }
 
   /**
    * Shows an image
    *
-   * @param {string} url - image source
+   * @param {ImageGalleryDataFile} file - image file object
    * @returns {void}
    */
-  fillImage(url) {
+  appendImage(file) {
+    let url = file.url;
+
     /**
      * Check for a source extension to compose element correctly: video tag for mp4, img — for others
      */
     const tag = /\.mp4$/.test(url) ? 'VIDEO' : 'IMG';
 
     const attributes = {
-      src: url,
+      src: url
     };
 
     /**
@@ -182,8 +181,7 @@ export default class Ui {
        *
        * @type {boolean}
        */
-      attributes.autoplay = true;
-      attributes.loop = true;
+      attributes.autoplay = false;
       attributes.muted = true;
       attributes.playsinline = true;
 
@@ -196,27 +194,62 @@ export default class Ui {
     }
 
     /**
+     * @type {Element}
+     */
+    let imageContainer = make('div', [this.CSS.imageContainer]);
+    imageContainer.dataset.galleryId = file._id;
+
+    /**
      * Compose tag with defined attributes
      *
      * @type {Element}
      */
-    this.nodes.imageEl = make(tag, this.CSS.imageEl, attributes);
+    let imageEl = make(tag, this.CSS.imageEl, attributes);
 
     /**
      * Add load event listener
      */
-    this.nodes.imageEl.addEventListener(eventName, () => {
-      this.toggleStatus(Ui.status.FILLED);
+    imageEl.addEventListener(eventName, () => {
+      this.toggleStatus(imageContainer, Ui.status.FILLED);
 
       /**
        * Preloader does not exists on first rendering with presaved data
        */
       if (this.nodes.imagePreloader) {
-        this.nodes.imagePreloader.style.backgroundImage = '';
+        this.hidePreloader();
       }
     });
 
-    this.nodes.imageContainer.appendChild(this.nodes.imageEl);
+    imageContainer.appendChild(imageEl);
+
+    const title = this.api.i18n.t('Delete');
+
+    /**
+     * @type {Element}
+     */
+    let imageTrash = make('div', [this.CSS.trashButton], {
+      innerHTML: trashIcon,
+      title,
+    });
+
+    this.api.tooltip.onHover(imageTrash, title, {
+      placement: 'top',
+    });
+
+    imageTrash.addEventListener('click', () => {
+      this.api.tooltip.hide();
+
+      this.nodes.itemsContainer.removeChild(imageContainer);
+
+      this.onDeleteFile(file._id);
+    });
+
+    imageContainer.appendChild(imageTrash);
+
+    /**
+     * Insert before preloader
+     */
+    this.nodes.itemsContainer.insertBefore(imageContainer, this.nodes.imagePreloader);
   }
 
   /**
@@ -246,26 +279,16 @@ export default class Ui {
   /**
    * Changes UI status
    *
+   * @param {Element} elem
    * @param {string} status - see {@link Ui.status} constants
    * @returns {void}
    */
-  toggleStatus(status) {
+  toggleStatus(elem, status) {
     for (const statusType in Ui.status) {
       if (Object.prototype.hasOwnProperty.call(Ui.status, statusType)) {
-        this.nodes.wrapper.classList.toggle(`${this.CSS.wrapper}--${Ui.status[statusType]}`, status === Ui.status[statusType]);
+        elem.classList.toggle(`${this.CSS.imageContainer}--${Ui.status[statusType]}`, status === Ui.status[statusType]);
       }
     }
-  }
-
-  /**
-   * Apply visual representation of activated tune
-   *
-   * @param {string} tuneName - one of available tunes {@link Tunes.tunes}
-   * @param {boolean} status - true for enable, false for disable
-   * @returns {void}
-   */
-  applyTune(tuneName, status) {
-    this.nodes.wrapper.classList.toggle(`${this.CSS.wrapper}--${tuneName}`, status);
   }
 }
 

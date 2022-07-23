@@ -1,7 +1,6 @@
 import { make } from './ui';
-import bgIcon from './svg/background.svg';
-import borderIcon from './svg/border.svg';
-import stretchedIcon from './svg/stretched.svg';
+import sliderIcon from './svg/slider.svg';
+import fitIcon from './svg/fit.svg';
 
 /**
  * Working with Block Tunes
@@ -28,19 +27,14 @@ export default class Tunes {
   static get tunes() {
     return [
       {
-        name: 'withBorder',
-        icon: borderIcon,
-        title: 'With border',
+        name: 'slider',
+        icon: sliderIcon,
+        title: 'Slider',
       },
       {
-        name: 'stretched',
-        icon: stretchedIcon,
-        title: 'Stretch image',
-      },
-      {
-        name: 'withBackground',
-        icon: bgIcon,
-        title: 'With background',
+        name: 'fit',
+        icon: fitIcon,
+        title: 'Fit',
       },
     ];
   }
@@ -52,9 +46,9 @@ export default class Tunes {
    */
   get CSS() {
     return {
-      wrapper: '',
+      wrapper: 'image-gallery__tune-wrapper',
       buttonBase: this.api.styles.settingsButton,
-      button: 'image-tool__tune',
+      button: 'image-gallery__tune',
       buttonActive: this.api.styles.settingsButtonActive,
     };
   }
@@ -62,7 +56,7 @@ export default class Tunes {
   /**
    * Makes buttons with tunes: add background, add border, stretch image
    *
-   * @param {ImageToolData} toolData - generate Elements of tunes
+   * @param {ImageGalleryData} toolData - generate Elements of tunes
    * @returns {Element}
    */
   render(toolData) {
@@ -84,7 +78,7 @@ export default class Tunes {
       });
 
       el.dataset.tune = tune.name;
-      el.classList.toggle(this.CSS.buttonActive, toolData[tune.name]);
+      el.classList.toggle(this.CSS.buttonActive, toolData.style === tune.name);
 
       this.buttons.push(el);
 
@@ -111,9 +105,9 @@ export default class Tunes {
       }
     }
 
-    const button = this.buttons.find(el => el.dataset.tune === tuneName);
-
-    button.classList.toggle(this.CSS.buttonActive, !button.classList.contains(this.CSS.buttonActive));
+    this.buttons.forEach(button => {
+      button.classList.toggle(this.CSS.buttonActive, button.dataset.tune === tuneName);
+    });
 
     this.onChange(tuneName);
   }
