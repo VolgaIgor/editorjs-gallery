@@ -32,7 +32,6 @@
 /**
  * @typedef {object} ImageGalleryDataFile
  * @description Image Gallery Tool's files data format
- * @property {integer} _id — image ID
  * @property {string} url — image URL
  */
 
@@ -46,7 +45,7 @@
  */
 
 // eslint-disable-next-line
-import css from './index.css';
+import css from './index.pcss';
 import Ui from './ui';
 import Tunes from './tunes';
 import ToolboxIcon from './svg/toolbox.svg';
@@ -170,8 +169,6 @@ export default class ImageGallery {
      */
     this._data = {};
     this.data = data;
-
-    this._imageCounter = 0;
   }
 
   /**
@@ -214,11 +211,6 @@ export default class ImageGallery {
     this._data.caption = caption.innerHTML;
     this._data.source = source.innerHTML;
 
-    let data = this.data;
-    data.files.forEach(file => {
-      delete file._id;
-    });
-
     return this.data;
   }
 
@@ -252,19 +244,36 @@ export default class ImageGallery {
    */
   appendImage(file) {
     if (file && file.url) {
-      file._id = this._imageCounter++;
       this._data.files.push(file);
       this.ui.appendImage(file);
     }
   }
 
-  deleteImage(id) {
-    let deleteIndex = this._data.files.findIndex(file => {
-      return file._id == id;
-    });
+  /**
+   * Move image file
+   *
+   * @private
+   *
+   * @param {integer} from - target image old index
+   * @param {integer} to - target image new index
+   */
+  moveImage(from, to) {
+    if (to >= this._data.files.length) {
+      to = this._data.files.length - 1;
+    }
+    this._data.files.splice(to, 0, this._data.files.splice(from, 1)[0]);
+  }
 
-    if (deleteIndex !== -1) {
-      this._data.files = this._data.files.splice(deleteIndex, 1);
+  /**
+   * Delete image file
+   *
+   * @private
+   *
+   * @param {integer} id - image index
+   */
+  deleteImage(id) {
+    if (this._data.files[id] !== undefined) {
+      this._data.files.splice(id, 1);
     }
   }
 

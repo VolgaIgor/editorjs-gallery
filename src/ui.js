@@ -197,7 +197,6 @@ export default class Ui {
      * @type {Element}
      */
     let imageContainer = make('div', [this.CSS.imageContainer]);
-    imageContainer.dataset.galleryId = file._id;
 
     /**
      * Compose tag with defined attributes
@@ -239,9 +238,14 @@ export default class Ui {
     imageTrash.addEventListener('click', () => {
       this.api.tooltip.hide();
 
-      this.nodes.itemsContainer.removeChild(imageContainer);
+      let arrayChild = Array.prototype.slice.call(this.nodes.itemsContainer.children);
+      let elIndex = arrayChild.indexOf(imageContainer);
 
-      this.onDeleteFile(file._id);
+      if (elIndex !== -1) {
+        this.nodes.itemsContainer.removeChild(imageContainer);
+
+        this.onDeleteFile(elIndex);
+      }
     });
 
     imageContainer.appendChild(imageTrash);
