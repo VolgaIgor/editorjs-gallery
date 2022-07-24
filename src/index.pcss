@@ -6,16 +6,28 @@
   &__items {
     display: grid;
     background: black;
-    padding: 10px;
+    padding: 12px 10px;
     gap: 10px;
     grid-template-columns: 1fr 1fr 1fr;
     margin-bottom: 10px;
+
+    &--drag {
+      .cdx-button {
+        display: none;
+      }
+    }
   }
 
   &__image {
     position: relative;
     overflow: hidden;
-    height: 120px;
+    height: 125px;
+    cursor: move;
+    user-select: none;
+
+    &.sortable-ghost {
+      opacity: .75;
+    }
 
     &--empty,
     &--loading {
@@ -29,6 +41,7 @@
       display: block;
       margin: auto;
       object-fit: cover;
+      pointer-events: none;
     }
 
     &-preloader {

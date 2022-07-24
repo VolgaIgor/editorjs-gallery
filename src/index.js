@@ -152,6 +152,9 @@ export default class ImageGallery {
       onDeleteFile: (id) => {
         this.deleteImage(id);
       },
+      onMoveFile: (oldId, newId) => {
+        this.moveImage(oldId, newId);
+      },
       readOnly,
     });
 
@@ -180,6 +183,10 @@ export default class ImageGallery {
    */
   render() {
     return this.ui.render(this.data);
+  }
+
+  rendered() {
+    return this.ui.onRendered();
   }
 
   /**
@@ -327,13 +334,13 @@ export default class ImageGallery {
    * @returns {void}
    */
   onUpload(response) {
-    this.ui.hidePreloader();
-
     if (response.success && response.file) {
       this.appendImage(response.file);
     } else {
       this.uploadingFailed('incorrect response: ' + JSON.stringify(response));
     }
+
+    this.ui.hidePreloader();
   }
 
   /**

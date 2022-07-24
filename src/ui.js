@@ -1,3 +1,5 @@
+import Sortable from 'sortablejs';
+
 import buttonIcon from './svg/button-icon.svg';
 import trashIcon from './svg/trash.svg';
 
@@ -15,11 +17,12 @@ export default class Ui {
    * @param {Function} ui.onSelectFile - callback for clicks on Select file button
    * @param {boolean} ui.readOnly - read-only mode flag
    */
-  constructor({ api, config, onSelectFile, onDeleteFile, readOnly }) {
+  constructor({ api, config, onSelectFile, onDeleteFile, onMoveFile, readOnly }) {
     this.api = api;
     this.config = config;
     this.onSelectFile = onSelectFile;
     this.onDeleteFile = onDeleteFile;
+    this.onMoveFile = onMoveFile;
     this.readOnly = readOnly;
     this.nodes = {
       wrapper: make('div', [this.CSS.baseClass, this.CSS.wrapper]),
@@ -107,6 +110,25 @@ export default class Ui {
     return this.nodes.wrapper;
   }
 
+  onRendered() {
+    if (!this.sortable) {
+      this.sortable = new Sortable(this.nodes.itemsContainer, {
+        handle: `.${this.CSS.imageContainer}`,
+        filter: `.${this.CSS.trashButton}`,
+        onStart: () => {
+          this.nodes.itemsContainer.classList.add(`${this.CSS.itemsContainer}--drag`);
+        },
+        onEnd: (evt) => {
+          this.nodes.itemsContainer.classList.remove(`${this.CSS.itemsContainer}--drag`);
+
+          if (evt.oldIndex !== evt.newIndex) {
+            this.onMoveFile(evt.oldIndex, evt.newIndex);
+          }
+        }
+      });
+    }
+  }
+
   /**
    * Creates upload-file button
    *
@@ -133,6 +155,10 @@ export default class Ui {
   showPreloader(src) {
     this.nodes.imagePreloader.style.backgroundImage = `url(${src})`;
     this.nodes.imagePreloader.style.display = 'block';
+
+    if (this.sortable) {
+      this.sortable.option("disabled", true);
+    }
   }
 
   /**
@@ -143,6 +169,10 @@ export default class Ui {
   hidePreloader() {
     this.nodes.imagePreloader.style.backgroundImage = '';
     this.nodes.imagePreloader.style.display = 'none';
+
+    if (this.sortable) {
+      this.sortable.option("disabled", false);
+    }
   }
 
   /**
@@ -211,12 +241,7 @@ export default class Ui {
     imageEl.addEventListener(eventName, () => {
       this.toggleStatus(imageContainer, Ui.status.FILLED);
 
-      /**
-       * Preloader does not exists on first rendering with presaved data
-       */
-      if (this.nodes.imagePreloader) {
-        this.hidePreloader();
-      }
+      this.hidePreloader();
     });
 
     imageContainer.appendChild(imageEl);
