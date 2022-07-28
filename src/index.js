@@ -233,16 +233,6 @@ export default class ImageGallery {
   }
 
   /**
-   * Fires after clicks on the Toolbox Image Icon
-   * Initiates click on the Select File button
-   *
-   * @public
-   */
-  appendCallback() {
-    this.ui.nodes.fileButton.click();
-  }
-
-  /**
    * Set new image file
    *
    * @private
