@@ -12,8 +12,9 @@
     margin-bottom: 10px;
 
     &--drag {
-      .cdx-button {
-        display: none;
+      .cdx-button,
+      .image-gallery__image-preloader {
+        display: none !important;
       }
     }
   }
@@ -21,7 +22,7 @@
   &__image {
     position: relative;
     overflow: hidden;
-    height: 125px;
+    height: 150px;
     cursor: move;
     user-select: none;
 
