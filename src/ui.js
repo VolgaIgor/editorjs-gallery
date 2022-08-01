@@ -56,6 +56,13 @@ export default class Ui {
     this.nodes.wrapper.appendChild(this.nodes.itemsContainer);
     this.nodes.wrapper.appendChild(this.nodes.caption);
     this.nodes.wrapper.appendChild(this.nodes.source);
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      this.nodes.itemsContainer.addEventListener(eventName, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
   }
 
   /**
@@ -173,6 +180,24 @@ export default class Ui {
     if (this.sortable) {
       this.sortable.option("disabled", false);
     }
+  }
+
+  /**
+   * Shows uploading button
+   *
+   * @returns {void}
+   */
+  showFileButton() {
+    this.nodes.fileButton.style.display = '';
+  }
+
+  /**
+   * Hide uploading button
+   *
+   * @returns {void}
+   */
+  hideFileButton() {
+    this.nodes.fileButton.style.display = 'none';
   }
 
   /**

@@ -125,6 +125,7 @@ export default class ImageGallery {
       buttonContent: config.buttonContent || '',
       uploader: config.uploader || undefined,
       actions: config.actions || [],
+      maxElementCount: config.maxElementCount || undefined,
     };
 
     /**
@@ -186,6 +187,8 @@ export default class ImageGallery {
   }
 
   rendered() {
+    this.checkMaxElemCount();
+
     return this.ui.onRendered();
   }
 
@@ -241,8 +244,14 @@ export default class ImageGallery {
    */
   appendImage(file) {
     if (file && file.url) {
+      if (this.config.maxElementCount && this._data.files.length >= this.config.maxElementCount) {
+        return;
+      }
+
       this._data.files.push(file);
       this.ui.appendImage(file);
+
+      this.checkMaxElemCount();
     }
   }
 
@@ -271,6 +280,8 @@ export default class ImageGallery {
   deleteImage(id) {
     if (this._data.files[id] !== undefined) {
       this._data.files.splice(id, 1);
+
+      this.checkMaxElemCount();
     }
   }
 
@@ -364,6 +375,14 @@ export default class ImageGallery {
       this._data.style = 'fit';
     } else {
       this._data.style = 'slider';
+    }
+  }
+
+  checkMaxElemCount() {
+    if (this.config.maxElementCount && this._data.files.length >= this.config.maxElementCount) {
+      this.ui.hideFileButton();
+    } else {
+      this.ui.showFileButton();
     }
   }
 }
