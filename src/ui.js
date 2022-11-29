@@ -37,12 +37,13 @@ export default class Ui {
       }),
     };
 
+    this.preloadersCount = 0;
+
     /**
      * Create base structure
      *  <wrapper>
      *    <items-container>
      *      <image-container />
-     *      <image-preloader />
      *      <select-file-button />
      *    </items-container>
      *    <caption />
@@ -51,7 +52,6 @@ export default class Ui {
      */
     this.nodes.caption.dataset.placeholder = this.config.captionPlaceholder;
     this.nodes.source.dataset.placeholder = this.config.sourcePlaceholder;
-    this.nodes.itemsContainer.appendChild(this.nodes.imagePreloader);
     this.nodes.itemsContainer.appendChild(this.nodes.fileButton);
     this.nodes.wrapper.appendChild(this.nodes.itemsContainer);
     this.nodes.wrapper.appendChild(this.nodes.caption);
@@ -154,35 +154,6 @@ export default class Ui {
   }
 
   /**
-   * Shows uploading preloader
-   *
-   * @param {string} src - preview source
-   * @returns {void}
-   */
-  showPreloader(src) {
-    this.nodes.imagePreloader.style.backgroundImage = `url(${src})`;
-    this.nodes.imagePreloader.style.display = 'block';
-
-    if (this.sortable) {
-      this.sortable.option("disabled", true);
-    }
-  }
-
-  /**
-   * Hide uploading preloader
-   *
-   * @returns {void}
-   */
-  hidePreloader() {
-    this.nodes.imagePreloader.style.backgroundImage = '';
-    this.nodes.imagePreloader.style.display = 'none';
-
-    if (this.sortable) {
-      this.sortable.option("disabled", false);
-    }
-  }
-
-  /**
    * Shows uploading button
    *
    * @returns {void}
@@ -198,6 +169,45 @@ export default class Ui {
    */
   hideFileButton() {
     this.nodes.fileButton.style.display = 'none';
+  }
+
+  getPreloader(file) {
+    this.preloadersCount++;
+    if (this.sortable) {
+      this.sortable.option("disabled", true);
+    }
+
+    /**
+     * @type {HTMLElement}
+     */
+    let imageContainer = make('div', [this.CSS.imageContainer]);
+
+    /**
+     * @type {HTMLElement}
+     */
+    let preloader = make('div', this.CSS.imagePreloader);
+    imageContainer.appendChild(preloader);
+
+    this.nodes.itemsContainer.insertBefore(imageContainer, this.nodes.fileButton);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      preloader.style.backgroundImage = `url(${e.target.result})`;
+    };
+
+    return imageContainer;
+  }
+
+  removePreloader(imageContainer) {
+    this.preloadersCount--;
+    imageContainer.remove();
+    
+    if (this.preloadersCount == 0) {
+      if (this.sortable) {
+        this.sortable.option("disabled", false);
+      }
+    }
   }
 
   /**
@@ -265,8 +275,6 @@ export default class Ui {
      */
     imageEl.addEventListener(eventName, () => {
       this.toggleStatus(imageContainer, Ui.status.FILLED);
-
-      this.hidePreloader();
     });
 
     imageContainer.appendChild(imageEl);
@@ -303,7 +311,7 @@ export default class Ui {
     /**
      * Insert before preloader
      */
-    this.nodes.itemsContainer.insertBefore(imageContainer, this.nodes.imagePreloader);
+    this.nodes.itemsContainer.insertBefore(imageContainer, this.nodes.fileButton);
   }
 
   /**

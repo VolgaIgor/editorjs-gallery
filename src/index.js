@@ -133,8 +133,6 @@ export default class ImageGallery {
      */
     this.uploader = new Uploader({
       config: this.config,
-      onUpload: (response) => this.onUpload(response),
-      onError: (error) => this.uploadingFailed(error),
     });
 
     /**
@@ -144,9 +142,16 @@ export default class ImageGallery {
       api,
       config: this.config,
       onSelectFile: () => {
-        this.uploader.uploadSelectedFile({
-          onPreview: (src) => {
-            this.ui.showPreloader(src);
+        let maxElementCount = (this.config.maxElementCount) ? this.config.maxElementCount - this._data.files.length : null;
+        this.uploader.uploadSelectedFiles(maxElementCount, {
+          onPreview: (file) => {
+            return this.ui.getPreloader(file);
+          },
+          onUpload: (response, previewElem) => {
+            this.onUpload(response, previewElem);
+          },
+          onError: (error, previewElem) => {
+            this.uploadingFailed(error, previewElem);
           },
         });
       },
@@ -334,14 +339,13 @@ export default class ImageGallery {
    * @param {UploadResponseFormat} response - uploading server response
    * @returns {void}
    */
-  onUpload(response) {
+  onUpload(response, previewElem) {
+    this.ui.removePreloader(previewElem);
     if (response.success && response.file) {
       this.appendImage(response.file);
     } else {
       this.uploadingFailed('incorrect response: ' + JSON.stringify(response));
     }
-
-    this.ui.hidePreloader();
   }
 
   /**
@@ -351,15 +355,15 @@ export default class ImageGallery {
    * @param {string} errorText - uploading error text
    * @returns {void}
    */
-  uploadingFailed(errorText) {
+  uploadingFailed(errorText, previewElem) {
+    this.ui.removePreloader(previewElem);
+
     console.log('Image Tool: uploading failed because of', errorText);
 
     this.api.notifier.show({
       message: this.api.i18n.t('Couldn’t upload image. Please try another.'),
       style: 'error',
     });
-
-    this.ui.hidePreloader();
   }
 
   /**
