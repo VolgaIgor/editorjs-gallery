@@ -27,12 +27,11 @@ export default class Ui {
     this.nodes = {
       wrapper: make('div', [this.CSS.baseClass, this.CSS.wrapper]),
       fileButton: this.createFileButton(),
-      imagePreloader: make('div', this.CSS.imagePreloader),
+      container: make('div', this.CSS.container),
       itemsContainer: make('div', this.CSS.itemsContainer),
+      controls: make('div', this.CSS.controls),
+      preloaderContainer: make('div', this.CSS.preloaderContainer),
       caption: make('div', [this.CSS.input, this.CSS.caption], {
-        contentEditable: !this.readOnly,
-      }),
-      source: make('div', [this.CSS.input, this.CSS.source], {
         contentEditable: !this.readOnly,
       }),
     };
@@ -42,20 +41,28 @@ export default class Ui {
     /**
      * Create base structure
      *  <wrapper>
-     *    <items-container>
-     *      <image-container />
-     *      <select-file-button />
-     *    </items-container>
+     *    <container>
+     *      <items-container>
+     *        <image-container />
+     *      </items-container>
+     *      <controls>
+     *        <preloader-container />
+     *        <select-file-button />
+     *      </controls>
+     *    </container>
      *    <caption />
-     *    <source />
      *  </wrapper>
      */
     this.nodes.caption.dataset.placeholder = this.config.captionPlaceholder;
-    this.nodes.source.dataset.placeholder = this.config.sourcePlaceholder;
-    this.nodes.itemsContainer.appendChild(this.nodes.fileButton);
-    this.nodes.wrapper.appendChild(this.nodes.itemsContainer);
+
+    this.nodes.controls.appendChild(this.nodes.preloaderContainer);
+    this.nodes.controls.appendChild(this.nodes.fileButton);
+
+    this.nodes.container.appendChild(this.nodes.itemsContainer);
+    this.nodes.container.appendChild(this.nodes.controls);
+
+    this.nodes.wrapper.appendChild(this.nodes.container);
     this.nodes.wrapper.appendChild(this.nodes.caption);
-    this.nodes.wrapper.appendChild(this.nodes.source);
 
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
       this.nodes.itemsContainer.addEventListener(eventName, function (e) {
@@ -81,13 +88,15 @@ export default class Ui {
        * Tool's classes
        */
       wrapper: 'image-gallery',
+      container: 'image-gallery__container',
+      controls: 'image-gallery__controls',
       itemsContainer: 'image-gallery__items',
       imageContainer: 'image-gallery__image',
-      imagePreloader: 'image-gallery__image-preloader',
+      preloaderContainer: 'image-gallery__preloaders',
+      imagePreloader: 'image-gallery__preloader',
       imageEl: 'image-gallery__image-picture',
       trashButton: 'image-gallery__image-trash',
       caption: 'image-gallery__caption',
-      source: 'image-gallery__source',
     };
   };
 
@@ -172,23 +181,12 @@ export default class Ui {
   }
 
   getPreloader(file) {
-    this.preloadersCount++;
-    if (this.sortable) {
-      this.sortable.option("disabled", true);
-    }
-
-    /**
-     * @type {HTMLElement}
-     */
-    let imageContainer = make('div', [this.CSS.imageContainer]);
-
     /**
      * @type {HTMLElement}
      */
     let preloader = make('div', this.CSS.imagePreloader);
-    imageContainer.appendChild(preloader);
 
-    this.nodes.itemsContainer.insertBefore(imageContainer, this.nodes.fileButton);
+    this.nodes.preloaderContainer.append(preloader);
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -196,18 +194,11 @@ export default class Ui {
       preloader.style.backgroundImage = `url(${e.target.result})`;
     };
 
-    return imageContainer;
+    return preloader;
   }
 
-  removePreloader(imageContainer) {
-    this.preloadersCount--;
-    imageContainer.remove();
-    
-    if (this.preloadersCount == 0) {
-      if (this.sortable) {
-        this.sortable.option("disabled", false);
-      }
-    }
+  removePreloader(preloader) {
+    preloader.remove();
   }
 
   /**
@@ -308,10 +299,7 @@ export default class Ui {
 
     imageContainer.appendChild(imageTrash);
 
-    /**
-     * Insert before preloader
-     */
-    this.nodes.itemsContainer.insertBefore(imageContainer, this.nodes.fileButton);
+    this.nodes.itemsContainer.append(imageContainer);
   }
 
   /**
@@ -323,18 +311,6 @@ export default class Ui {
   fillCaption(text) {
     if (this.nodes.caption) {
       this.nodes.caption.innerHTML = text;
-    }
-  }
-
-  /**
-   * Shows source input
-   *
-   * @param {string} text - source text
-   * @returns {void}
-   */
-  fillSource(text) {
-    if (this.nodes.source) {
-      this.nodes.source.innerHTML = text;
     }
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "editorjs-gallery",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "keywords": [
     "codex editor",
     "tool",
@@ -21,7 +21,7 @@
     "lint:fix": "eslint src/ --ext .js --fix"
   },
   "author": {
-    "name": "CodeX & Igor Shuvalov «VolgaIgor»"
+    "name": "Igor Shuvalov «VolgaIgor» & CodeX"
   },
   "devDependencies": {
     "@babel/core": "^7.3.4",

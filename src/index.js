@@ -40,7 +40,6 @@
  * @description Image Tool's input and output data format
  * @property {boolean} style - slider or fit
  * @property {string} caption — gallery caption
- * @property {string} source — gallery source info
  * @property {ImageGalleryDataFile[]} files — Image file data returned from backend
  */
 
@@ -59,7 +58,6 @@ import Uploader from './uploader';
  * @property {string} field - field name for uploaded image
  * @property {string} types - available mime-types
  * @property {string} captionPlaceholder - placeholder for Caption field
- * @property {string} sourcePlaceholder - placeholder for Source field
  * @property {object} additionalRequestData - any data to send with requests
  * @property {object} additionalRequestHeaders - allows to pass custom headers with Request
  * @property {string} buttonContent - overrides for Select File button
@@ -121,7 +119,6 @@ export default class ImageGallery {
       field: config.field || 'image',
       types: config.types || 'image/*',
       captionPlaceholder: this.api.i18n.t(config.captionPlaceholder || 'Gallery caption'),
-      sourcePlaceholder: this.api.i18n.t(config.sourcePlaceholder || 'Images source'),
       buttonContent: config.buttonContent || '',
       uploader: config.uploader || undefined,
       actions: config.actions || [],
@@ -221,10 +218,8 @@ export default class ImageGallery {
    */
   save() {
     const caption = this.ui.nodes.caption;
-    const source = this.ui.nodes.source;
 
     this._data.caption = caption.innerHTML;
-    this._data.source = source.innerHTML;
 
     return this.data;
   }
@@ -312,9 +307,6 @@ export default class ImageGallery {
 
     this._data.caption = data.caption || '';
     this.ui.fillCaption(this._data.caption);
-
-    this._data.source = data.source || '';
-    this.ui.fillSource(this._data.source);
 
     let style = data.style || '';
     this.styleToggled(style);
