@@ -23,7 +23,6 @@ Loader based on [editor-js/image](https://github.com/editor-js/image).
 2. Add `dist/bundle.js` file to your page.
 
 ## Usage
-### For all blocks
 ```javascript
 var editor = EditorJS({
   // ...
