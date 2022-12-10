@@ -1,9 +1,9 @@
 /**
  * Image Gallery Tool for the Editor.js
  *
- * @author CodeX <team@codex.so>
+ * @author Igor Shuvalov «VolgaIgor»
  * @license MIT
- * @see {@link https://github.com/editor-js/image}
+ * @see {@link https://github.com/VolgaIgor/editorjs-gallery}
  *
  * To developers.
  * To simplify Tool structure, we split it to 4 parts:
@@ -19,7 +19,7 @@
  *
  * It will expose 8008 port, so you can pass http://localhost:8008 with the Tools config:
  *
- * image: {
+ * gallery: {
  *   class: ImageGallery,
  *   config: {
  *     endpoints: {

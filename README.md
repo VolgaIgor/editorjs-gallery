@@ -28,7 +28,14 @@ var editor = EditorJS({
   // ...
   tools: {
     // ...
-    gallery: ImageGallery
+    gallery: gallery: {
+      class: ImageGallery,
+      config: {
+        endpoints: {
+          byFile: 'http://localhost:8008/uploadFile',
+        }
+      },
+    },
   }
   // ...
 });
@@ -42,7 +49,7 @@ Gallery block supports these configuration parameters:
 | ----- | -------- | ------------------ |
 | maxElementCount | `int` | (default: `undefined`) Maximum allowed number of images |
 | buttonContent | `string` | (default: `Select an Image`) Label for upload button |
-| sourcePlaceholder | `string` | (default: `Source`) Placeholder for Source input |
+| captionPlaceholder | `string` | (default: `Gallery caption`) Placeholder for gallery caption input |
 | uploader | `{{uploadByFile: function}}` | Optional custom uploading method. [See details](https://github.com/editor-js/image#providing-custom-uploading-methods). |
 | [And others from the original ](https://github.com/editor-js/image#config-params) |
 
