@@ -28,7 +28,7 @@ var editor = EditorJS({
   // ...
   tools: {
     // ...
-    gallery: gallery: {
+    gallery: {
       class: ImageGallery,
       config: {
         endpoints: {
