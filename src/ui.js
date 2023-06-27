@@ -36,8 +36,6 @@ export default class Ui {
       }),
     };
 
-    this.preloadersCount = 0;
-
     /**
      * Create base structure
      *  <wrapper>
@@ -47,6 +45,7 @@ export default class Ui {
      *      </items-container>
      *      <controls>
      *        <preloader-container />
+     *        <limit-counter />
      *        <select-file-button />
      *      </controls>
      *    </container>
@@ -56,6 +55,10 @@ export default class Ui {
     this.nodes.caption.dataset.placeholder = this.config.captionPlaceholder;
 
     this.nodes.controls.appendChild(this.nodes.preloaderContainer);
+    if (this.config.maxElementCount) {
+      this.nodes.limitCounter = make('div', this.CSS.limitCounter);
+      this.nodes.controls.appendChild(this.nodes.limitCounter);
+    }
     this.nodes.controls.appendChild(this.nodes.fileButton);
 
     this.nodes.container.appendChild(this.nodes.itemsContainer);
@@ -90,6 +93,7 @@ export default class Ui {
       wrapper: 'image-gallery',
       container: 'image-gallery__container',
       controls: 'image-gallery__controls',
+      limitCounter: 'image-gallery__counter',
       itemsContainer: 'image-gallery__items',
       imageContainer: 'image-gallery__image',
       preloaderContainer: 'image-gallery__preloaders',
@@ -325,6 +329,22 @@ export default class Ui {
     for (const statusType in Ui.status) {
       if (Object.prototype.hasOwnProperty.call(Ui.status, statusType)) {
         elem.classList.toggle(`${this.CSS.imageContainer}--${Ui.status[statusType]}`, status === Ui.status[statusType]);
+      }
+    }
+  }
+
+  /**
+   * @param {int} imageCount
+   * @param {int|null} limitCounter
+   * @returns {void}
+   */
+  updateLimitCounter(imageCount, limitCounter) {
+    if (limitCounter && this.nodes.limitCounter) {
+      if (imageCount === 0) {
+        this.nodes.limitCounter.style.display = 'none';
+      } else {
+        this.nodes.limitCounter.style.display = null;
+        this.nodes.limitCounter.innerText = `${imageCount} / ${limitCounter}`;
       }
     }
   }

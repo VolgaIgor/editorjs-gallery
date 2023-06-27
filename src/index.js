@@ -375,6 +375,8 @@ export default class ImageGallery {
   }
 
   checkMaxElemCount() {
+    this.ui.updateLimitCounter(this._data.files.length, this.config.maxElementCount);
+
     if (this.config.maxElementCount && this._data.files.length >= this.config.maxElementCount) {
       this.ui.hideFileButton();
     } else {
