@@ -152,11 +152,33 @@
 
   &__tune-wrapper {
     display: flex;
+    gap: 6px;
+    margin: 5px 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   &__tune {
-    width: 50%;
-    margin-right: 0 !important;
+    flex-grow: 1;
+    padding: 6px;
+    color: var(--color-text-primary);
+
+    &.active {
+      background: var(--color-background-icon-active);
+      color: var(--color-text-icon-active);
+      border-color: var(--color-text-icon-active);
+    }
+
+    & svg {
+      width: 24px;
+      height: 24px;
+    }
   }
 }
 

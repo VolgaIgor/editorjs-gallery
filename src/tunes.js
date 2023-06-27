@@ -47,9 +47,9 @@ export default class Tunes {
   get CSS() {
     return {
       wrapper: 'image-gallery__tune-wrapper',
-      buttonBase: this.api.styles.settingsButton,
+      buttonBase: this.api.styles.button,
       button: 'image-gallery__tune',
-      buttonActive: this.api.styles.settingsButtonActive,
+      buttonActive: 'active',
     };
   }
 
