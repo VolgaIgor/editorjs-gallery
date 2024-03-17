@@ -2,6 +2,7 @@ import Sortable from 'sortablejs';
 
 import buttonIcon from './svg/button-icon.svg';
 import trashIcon from './svg/trash.svg';
+import zoomInIcon from './svg/zoom-in.svg';
 
 /**
  * Class for working with UI:
@@ -66,7 +67,9 @@ export default class Ui {
 
     this.nodes.wrapper.appendChild(this.nodes.container);
     this.nodes.wrapper.appendChild(this.nodes.caption);
-
+    if (this.readOnly) {
+      this.nodes.controls.style.display = 'none';
+    }
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
       this.nodes.itemsContainer.addEventListener(eventName, function (e) {
         e.preventDefault();
@@ -159,9 +162,14 @@ export default class Ui {
 
     button.innerHTML = this.config.buttonContent || `${buttonIcon} ${this.api.i18n.t('Select an Image')}`;
 
-    button.addEventListener('click', () => {
-      this.onSelectFile();
-    });
+    // Проверяем значение readOnly и скрываем кнопку, если она равна true
+    if (!this.readOnly) {
+      button.addEventListener('click', () => {
+        this.onSelectFile();
+      });
+    } else {
+      button.style.display = 'none';
+    }
 
     return button;
   }
@@ -275,24 +283,34 @@ export default class Ui {
     imageContainer.appendChild(imageEl);
 
     const title = this.api.i18n.t('Delete');
+    const zoomTitle = this.api.i18n.t('Zoom');
 
     /**
      * @type {Element}
      */
-    let imageTrash = make('div', [this.CSS.trashButton], {
+    const imageTrash = make('div', [this.CSS.trashButton], {
       innerHTML: trashIcon,
       title,
+    });
+
+    const imageZoom = make('div', [this.CSS.trashButton], {
+      innerHTML: zoomInIcon,
+      zoomTitle,
     });
 
     this.api.tooltip.onHover(imageTrash, title, {
       placement: 'top',
     });
 
+    this.api.tooltip.onHover(imageZoom, zoomTitle, {
+      placement: 'top',
+    });
+
     imageTrash.addEventListener('click', () => {
       this.api.tooltip.hide();
 
-      let arrayChild = Array.prototype.slice.call(this.nodes.itemsContainer.children);
-      let elIndex = arrayChild.indexOf(imageContainer);
+      const arrayChild = Array.prototype.slice.call(this.nodes.itemsContainer.children);
+      const elIndex = arrayChild.indexOf(imageContainer);
 
       if (elIndex !== -1) {
         this.nodes.itemsContainer.removeChild(imageContainer);
@@ -301,7 +319,78 @@ export default class Ui {
       }
     });
 
-    imageContainer.appendChild(imageTrash);
+    /**
+     * Закрывает модальное окно с увеличенным изображением.
+     */
+    function closeZoomedImage() {
+      // Найти все модальные окна
+      const zoomContainers = document.querySelectorAll('.zoom-container');
+
+      // Пройти по всем найденным модальным окнам и удалить их
+      zoomContainers.forEach(container => {
+        container.remove();
+      });
+    }
+
+    /**
+     * Отображает увеличенное изображение в модальном окне.
+     *
+     * @param {object} myFile - Объект с данными файла для отображения.
+     *                          Содержит свойство `url` с URL изображения.
+     */
+    function showZoomedImage(myFile) {
+      // Закрыть предыдущее модальное окно, если оно открыто
+      closeZoomedImage();
+
+      // Создаем модальное окно или другой контейнер для отображения увеличенного изображения
+      const zoomContainer = document.createElement('div');
+
+      zoomContainer.classList.add('zoom-container');
+
+      // Создаем элемент изображения и устанавливаем его исходный размер
+      const zoomImage = document.createElement('img');
+
+      zoomImage.src = myFile.url;
+      zoomImage.style.width = '100%'; // Устанавливаем ширину на 100% для увеличенного масштаба
+
+      // Добавляем изображение в контейнер
+      zoomContainer.appendChild(zoomImage);
+
+      // Добавляем кнопку закрытия
+      const closeButton = document.createElement('div');
+
+      closeButton.classList.add('close-button');
+      closeButton.textContent = 'X';
+      zoomContainer.appendChild(closeButton);
+
+      // Добавляем контейнер с увеличенным изображением на страницу
+      document.body.appendChild(zoomContainer);
+
+      // Добавляем обработчик события для закрытия модального окна при клике на кнопку закрытия
+      closeButton.addEventListener('click', () => {
+        // Удаляем контейнер с увеличенным изображением
+        if (zoomImage.parentNode) {
+          // Удаляем контейнер с увеличенным изображением
+          zoomContainer.remove();
+          // Удаляем изображение
+          zoomImage.remove();
+        }
+      });
+    }
+
+    imageZoom.addEventListener('click', () => {
+      this.api.tooltip.hide();
+
+      showZoomedImage(file);
+    });
+
+    if (!this.readOnly) {
+      imageContainer.appendChild(imageTrash);
+      imageZoom.style.display = 'none';
+    } else {
+      imageTrash.style.display = 'none';
+      imageContainer.appendChild(imageZoom);
+    }
 
     this.nodes.itemsContainer.append(imageContainer);
   }
