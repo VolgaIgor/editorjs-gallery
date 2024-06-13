@@ -1,7 +1,4 @@
-import Sortable from 'sortablejs';
-
-import buttonIcon from './svg/button-icon.svg';
-import trashIcon from './svg/trash.svg';
+import { IconPicture, IconTrash } from '@codexteam/icons'
 
 /**
  * Class for working with UI:
@@ -52,20 +49,27 @@ export default class Ui {
      *    <caption />
      *  </wrapper>
      */
-    this.nodes.caption.dataset.placeholder = this.config.captionPlaceholder;
+    this.nodes.caption.dataset.placeholder = this.api.i18n.t('Gallery caption');
 
-    this.nodes.controls.appendChild(this.nodes.preloaderContainer);
-    if (this.config.maxElementCount) {
-      this.nodes.limitCounter = make('div', this.CSS.limitCounter);
-      this.nodes.controls.appendChild(this.nodes.limitCounter);
+    if (!this.readOnly) {
+      this.nodes.controls.appendChild(this.nodes.preloaderContainer);
+      if (this.config.maxElementCount) {
+        this.nodes.limitCounter = make('div', this.CSS.limitCounter);
+        this.nodes.controls.appendChild(this.nodes.limitCounter);
+      }
+      this.nodes.controls.appendChild(this.nodes.fileButton);
     }
-    this.nodes.controls.appendChild(this.nodes.fileButton);
 
     this.nodes.container.appendChild(this.nodes.itemsContainer);
-    this.nodes.container.appendChild(this.nodes.controls);
+    if (!this.readOnly) {
+      this.nodes.container.appendChild(this.nodes.controls);
+    }
 
     this.nodes.wrapper.appendChild(this.nodes.container);
-    this.nodes.wrapper.appendChild(this.nodes.caption);
+
+    if (!this.readOnly) {
+      this.nodes.wrapper.appendChild(this.nodes.caption);
+    }
 
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
       this.nodes.itemsContainer.addEventListener(eventName, function (e) {
@@ -131,8 +135,8 @@ export default class Ui {
   }
 
   onRendered() {
-    if (!this.sortable) {
-      this.sortable = new Sortable(this.nodes.itemsContainer, {
+    if (!this.readOnly && !this.sortable) {
+      this.sortable = new this.config.sortableJs(this.nodes.itemsContainer, {
         handle: `.${this.CSS.imageContainer}`,
         filter: `.${this.CSS.trashButton}`,
         onStart: () => {
@@ -146,6 +150,8 @@ export default class Ui {
           }
         }
       });
+
+      this.nodes.itemsContainer.classList.add('sortable')
     }
   }
 
@@ -157,7 +163,7 @@ export default class Ui {
   createFileButton() {
     const button = make('div', [this.CSS.button]);
 
-    button.innerHTML = this.config.buttonContent || `${buttonIcon} ${this.api.i18n.t('Select an Image')}`;
+    button.innerHTML = this.config.buttonContent || `${IconPicture} ${this.api.i18n.t('Select an Image')}`;
 
     button.addEventListener('click', () => {
       this.onSelectFile();
@@ -276,32 +282,34 @@ export default class Ui {
 
     const title = this.api.i18n.t('Delete');
 
-    /**
-     * @type {Element}
-     */
-    let imageTrash = make('div', [this.CSS.trashButton], {
-      innerHTML: trashIcon,
-      title,
-    });
+    if (!this.readOnly) {
+      /**
+       * @type {Element}
+       */
+      let imageTrash = make('div', [this.CSS.trashButton], {
+        innerHTML: IconTrash,
+        title,
+      });
 
-    this.api.tooltip.onHover(imageTrash, title, {
-      placement: 'top',
-    });
+      this.api.tooltip.onHover(imageTrash, title, {
+        placement: 'top',
+      });
 
-    imageTrash.addEventListener('click', () => {
-      this.api.tooltip.hide();
+      imageTrash.addEventListener('click', () => {
+        this.api.tooltip.hide();
 
-      let arrayChild = Array.prototype.slice.call(this.nodes.itemsContainer.children);
-      let elIndex = arrayChild.indexOf(imageContainer);
+        let arrayChild = Array.prototype.slice.call(this.nodes.itemsContainer.children);
+        let elIndex = arrayChild.indexOf(imageContainer);
 
-      if (elIndex !== -1) {
-        this.nodes.itemsContainer.removeChild(imageContainer);
+        if (elIndex !== -1) {
+          this.nodes.itemsContainer.removeChild(imageContainer);
 
-        this.onDeleteFile(elIndex);
-      }
-    });
+          this.onDeleteFile(elIndex);
+        }
+      });
 
-    imageContainer.appendChild(imageTrash);
+      imageContainer.appendChild(imageTrash);
+    }
 
     this.nodes.itemsContainer.append(imageContainer);
   }

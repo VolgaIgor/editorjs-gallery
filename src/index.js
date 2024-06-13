@@ -47,7 +47,7 @@
 import css from './index.pcss';
 import Ui from './ui';
 import Tunes from './tunes';
-import ToolboxIcon from './svg/toolbox.svg';
+import ToolboxIcon from './svg/toolbox.svg?raw';
 import Uploader from './uploader';
 
 /**
@@ -57,7 +57,6 @@ import Uploader from './uploader';
  * @property {string} endpoints.byFile - upload by file
  * @property {string} field - field name for uploaded image
  * @property {string} types - available mime-types
- * @property {string} captionPlaceholder - placeholder for Caption field
  * @property {object} additionalRequestData - any data to send with requests
  * @property {object} additionalRequestHeaders - allows to pass custom headers with Request
  * @property {string} buttonContent - overrides for Select File button
@@ -118,11 +117,11 @@ export default class ImageGallery {
       additionalRequestHeaders: config.additionalRequestHeaders || {},
       field: config.field || 'image',
       types: config.types || 'image/*',
-      captionPlaceholder: this.api.i18n.t(config.captionPlaceholder || 'Gallery caption'),
       buttonContent: config.buttonContent || '',
       uploader: config.uploader || undefined,
-      actions: config.actions || [],
+      actions: config.actions || undefined,
       maxElementCount: config.maxElementCount || undefined,
+      sortableJs: config.sortableJs,
     };
 
     /**
@@ -225,7 +224,7 @@ export default class ImageGallery {
   }
 
   /**
-   * Makes buttons with tunes: add background, add border, stretch image
+   * Makes buttons with tunes
    *
    * @public
    *

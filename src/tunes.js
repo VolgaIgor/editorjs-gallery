@@ -1,6 +1,6 @@
 import { make } from './ui';
-import sliderIcon from './svg/slider.svg';
-import fitIcon from './svg/fit.svg';
+import sliderIcon from './svg/slider.svg?raw';
+import fitIcon from './svg/fit.svg?raw';
 
 /**
  * Working with Block Tunes
@@ -54,7 +54,7 @@ export default class Tunes {
   }
 
   /**
-   * Makes buttons with tunes: add background, add border, stretch image
+   * Makes buttons with tunes
    *
    * @param {ImageGalleryData} toolData - generate Elements of tunes
    * @returns {Element}
@@ -62,9 +62,9 @@ export default class Tunes {
   render(toolData) {
     const wrapper = make('div', this.CSS.wrapper);
 
-    this.buttons = [];
+    const tunes = this.actions ?? Tunes.tunes;
 
-    const tunes = Tunes.tunes.concat(this.actions);
+    this.buttons = [];
 
     tunes.forEach(tune => {
       const title = this.api.i18n.t(tune.title);

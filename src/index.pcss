@@ -63,11 +63,14 @@
     }
   }
 
+  .sortable &__image {
+    cursor: move;
+  }
+
   &__image {
     position: relative;
     overflow: hidden;
     aspect-ratio: 16 / 9;
-    cursor: move;
     user-select: none;
     background-color: black;
     border-radius: 3px;
@@ -176,6 +179,9 @@
     flex-grow: 1;
     padding: 6px;
     color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &.active {
       background: var(--color-background-icon-active);
