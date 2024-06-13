@@ -18,13 +18,13 @@ Loader based on [editor-js/image](https://github.com/editor-js/image).
 Get the package
 
 ```shell
-$ npm i editorjs-gallery
+$ npm i @kiberpro/editorjs-gallery
 ```
 
 Include module at your application
 
 ```javascript
-import ImageGallery from 'editorjs-gallery';
+import ImageGallery from '@kiberpro/editorjs-gallery';
 ```
 
 ### Load from CDN
@@ -34,7 +34,7 @@ You can load a specific version of the package from jsDelivr CDN.
 Require this script on a page with Editor.js.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/editorjs-gallery"></script>
+<script src="https://cdn.jsdelivr.net/npm/kiberpro/editorjs-gallery"></script>
 ```
 
 ### Download to your project's source dir
